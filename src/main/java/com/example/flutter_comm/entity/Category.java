@@ -34,8 +34,13 @@ public class Category {
 
     public Category() {
     }
-
     public Category(String name, String slug) {
+        this.name = name;
+        this.slug = slug;
+    }
+
+    public Category(Long id,String name, String slug) {
+        this.id = id;
         this.name = name;
         this.slug = slug;
     }

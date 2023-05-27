@@ -1,14 +1,14 @@
 package com.example.flutter_comm.service;
 
-import com.example.flutter_comm.dto.post.PostGetDto;
 import com.example.flutter_comm.dto.post.PostSaveDto;
-import org.springframework.data.domain.Page;
+import com.example.flutter_comm.dto.post.PostUpdateDto;
 
-import java.util.List;
+import java.util.UUID;
 
 
 public interface PostService {
-    Page<PostGetDto> getPaginate(int pageNum, int pageSize);
-    List<PostGetDto> get();
+
+
     boolean save(PostSaveDto postSaveDto);
+    boolean update(PostUpdateDto postUpdateDto, UUID uuid);
 }

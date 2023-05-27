@@ -1,4 +1,12 @@
 spring:
+  cache:
+    type: caffeine
+  #  redis:
+#    host: redis-16730.c295.ap-southeast-1-1.ec2.cloud.redislabs.com
+#    port: 16730
+#    password: 7dnAY9vTVBKMQhQZCoMrNP2yYUU8m5JO
+#    username: "default"
+#    ssl: true
   main:
     allow-circular-references: true
   jackson:

@@ -8,13 +8,15 @@ import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Builder
 @Setter
 @Getter
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "tags")
 public class Tag {
     @Id
@@ -32,29 +34,12 @@ public class Tag {
 
     //relationship
     @ManyToOne
-    @JoinColumn(name = "tag_created_by", nullable = false)
+    @JoinColumn(name = "tag_created_by")
     private User created_by;
     @JsonIgnore
     @ManyToMany(mappedBy = "tags", targetEntity = Post.class)
     @JsonIgnoreProperties("tags")
-    List<Post> posts = new ArrayList<>();
+    private Set<Post> posts = new HashSet<>();
 
-    public Tag() {
-    }
 
-    public Tag(String name, String slug, User created_by) {
-        this.name = name;
-        this.slug = slug;
-        this.created_by = created_by;
-    }
-
-    public Tag(Long id, String name, String slug, LocalDateTime createdAt, LocalDateTime updatedAt, User created_by, List<Post> posts) {
-        this.id = id;
-        this.name = name;
-        this.slug = slug;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.created_by = created_by;
-        this.posts = posts;
-    }
 }

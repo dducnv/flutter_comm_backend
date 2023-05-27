@@ -14,7 +14,7 @@ public class SlugGenerating {
         String normalized = Normalizer.normalize(nowhitespace, Normalizer.Form.NFD);
         String slug = NONLATIN.matcher(normalized).replaceAll("");
         slug = EDGESDHASHES.matcher(slug).replaceAll("");
-        return slug.toLowerCase(Locale.ENGLISH).concat("-"+ String.valueOf(Generating.generatePassword(4,false)));
+        return slug.toLowerCase(Locale.ENGLISH);
     }
 
     public static  String toUsername(String email){

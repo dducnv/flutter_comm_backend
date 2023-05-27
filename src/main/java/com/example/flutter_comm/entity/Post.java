@@ -3,13 +3,16 @@ package com.example.flutter_comm.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
+import org.hibernate.annotations.*;
 
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import javax.persistence.*;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Builder
@@ -17,6 +20,7 @@ import java.util.Set;
 @Getter
 @AllArgsConstructor
 @NoArgsConstructor
+
 @Table(name = "posts")
 public class Post {
     @Id
@@ -26,42 +30,45 @@ public class Post {
     private Long id;
     @Column(name = "post_title")
     private String title;
-    @Column(unique = true,name = "post_slug")
+    @Column(name = "post_slug",unique = true)
     private String slug;
-
+    @Column(name = "post_uuid", columnDefinition = "char(36)")
+    @Type(type = "org.hibernate.type.UUIDCharType")
+    private UUID uuid;
     @Column(columnDefinition = "text", name = "post_content")
     private String content;
     @Column(columnDefinition = "text",name = "post_desc")
     private String description;
-
-    //stats
-    @Column(columnDefinition = "int(11) default 0", name = "vote_count")
-    private int voteCount;
+    @Column(columnDefinition = "int(11) default 0", name = "view_count")
+    private int viewCount;
 
     //relationship
     @ManyToOne
     @JoinColumn(name = "author", nullable = false)
     private User author;
-
     @ManyToOne
     @JoinColumn(name = "post_category_id", nullable = false)
     private Category category;
-
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
     private Set<ReactionPostCount> reactionCounts = new HashSet<>();
-
-    @ManyToMany(fetch = FetchType.EAGER,cascade = CascadeType.MERGE, targetEntity = Tag.class)
+    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL)
+    private Set<CommentPost> commentPosts = new HashSet<>();
+    @ManyToMany
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinTable(
-            name = "posts_tags",
-            joinColumns = @JoinColumn(name = "post_id"),
-            inverseJoinColumns = @JoinColumn(name = "tag_id"))
+            name = "post_tags",
+            joinColumns = @JoinColumn(name = "post_id", referencedColumnName = "id"),
+            inverseJoinColumns = @JoinColumn(name = "tag_id", referencedColumnName = "id"))
     @JsonIgnoreProperties("posts")
-    Set<Tag> tags = new HashSet<>();
+    private Set<Tag> tags = new HashSet<>();
     //status info
     @CreationTimestamp
     private LocalDateTime createdAt;
     @UpdateTimestamp
     private LocalDateTime updatedAt;
-    @Column(name = "post_status")
+    @Column(name = "post_public")
+    private boolean postPublic = Boolean.TRUE;
     private String status;
 }

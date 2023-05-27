@@ -4,10 +4,7 @@ import com.example.flutter_comm.config.TokenProvider;
 import com.example.flutter_comm.config.oauth2.user.OAuth2UserInfo;
 import com.example.flutter_comm.dto.CredentialDto;
 import com.example.flutter_comm.dto.UserInfoDto;
-import com.example.flutter_comm.dto.user.AuthorForPostDto;
-import com.example.flutter_comm.dto.user.GetOtpDto;
-import com.example.flutter_comm.dto.user.LoginEmailPasswordDto;
-import com.example.flutter_comm.dto.user.OtpResDto;
+import com.example.flutter_comm.dto.user.*;
 import com.example.flutter_comm.entity.Role;
 import com.example.flutter_comm.entity.User;
 import com.example.flutter_comm.entity.my_enum.AuthProvider;
@@ -30,10 +27,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service(value = "userService")
@@ -42,55 +36,90 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserDetailsService, UserService {
     private final int expireTime = 60 * 1000 * 5;
-    @Autowired
-    UserRepository userRepository;
-    @Autowired
-    RoleRepository roleRepository;
-    @Autowired
-    PasswordEncoder passwordEncoder;
-    @Autowired
+    private UserRepository userRepository;
+    private RoleRepository roleRepository;
+    private PasswordEncoder passwordEncoder;
     private TokenProvider jwtTokenUtil;
+
+    private TopicInterestServiceImpl topicInterestService;
+
+    @Autowired
+    public UserServiceImpl(UserRepository userRepository, RoleRepository roleRepository, PasswordEncoder passwordEncoder, TokenProvider jwtTokenUtil, TopicInterestServiceImpl topicInterestService) {
+        this.userRepository = userRepository;
+        this.roleRepository = roleRepository;
+        this.passwordEncoder = passwordEncoder;
+        this.jwtTokenUtil = jwtTokenUtil;
+        this.topicInterestService = topicInterestService;
+    }
 //    @Autowired
 //    AuthenticationManager authenticationManager;
 
     @Override
-    public UserInfoDto myInfo() {
+    public MyInfoDto myInfo() {
         User user = getUserFromToken();
-        System.out.println(user.getName());
+        topicInterestService.filterTopicForUser(user);
         return toUserDTO(user);
     }
 
     @Override
-    public User registerNewUserForSocial(AuthProvider authProvider , OAuth2UserInfo oAuth2UserInfo) {
+    public User registerNewUserForSocial(AuthProvider authProvider, OAuth2UserInfo oAuth2UserInfo) {
         User user = new User();
+        UUID uuid = UUID.randomUUID();
         user.setProvider(authProvider);
         user.setProviderId(oAuth2UserInfo.getId());
         user.setAvatar(oAuth2UserInfo.getImageUrl());
         user.setName(oAuth2UserInfo.getName());
+        user.setUuid(uuid);
         user.setEmail(oAuth2UserInfo.getEmail());
         user.setUsername(Generating.generateUsername(oAuth2UserInfo.getName()));
-        user.setPassword(passwordEncoder.encode(oAuth2UserInfo.getEmail()+"flutter_comm_since_2023"));
+        user.setPassword(passwordEncoder.encode(oAuth2UserInfo.getEmail() + "flutter_comm_since_2023"));
         user.setStatus(UserStatus.ACTIVE);
         user = userRepository.save(user);
         return user;
     }
 
-    public void seedUserService(User userSave){
+    public void seedUserService(User userSave) {
         User user = new User();
+        UUID uuid = UUID.randomUUID();
         user.setProvider(AuthProvider.local);
         user.setAvatar(userSave.getAvatar());
         user.setName(userSave.getName());
+        user.setUuid(uuid);
         user.setEmail(userSave.getEmail());
         user.setUsername(Generating.generateUsername(userSave.getName()));
-        user.setPassword(passwordEncoder.encode(userSave.getEmail()+"flutter_comm_since_2023"));
+        user.setPassword(passwordEncoder.encode(userSave.getEmail() + "flutter_comm_since_2023"));
         user.setStatus(UserStatus.ACTIVE);
         user = userRepository.save(user);
         setRoleForUser(user);
-    };
+    }
+
+    private OtpResDto registerUser(RegisterDto registerDto) {
+        boolean isExistUsername = userRepository.existsByUsername(registerDto.getUserName());
+        if (isExistUsername) {
+            throw new ApiRequestException("Username này đã tồn tại");
+        }
+        boolean isExistEmail = userRepository.existsByEmail(registerDto.getEmail());
+        if (isExistEmail) {
+            throw new ApiRequestException("Email này đã tồn tại");
+        }
+        User user = new User();
+        UUID uuid = UUID.randomUUID();
+        user.setUuid(uuid);
+        user.setName(registerDto.getFullName());
+        user.setEmail(registerDto.getEmail());
+        user.setUsername(registerDto.getUserName());
+        User userSave = userRepository.save(user);
+        GetOtpDto getOtpDto = new GetOtpDto();
+        getOtpDto.setEmail(userSave.getEmail());
+        return getOtp(getOtpDto);
+    }
+
+    ;
+
     @Override
     public UserInfoDto findByUsername(String username) {
         User user = userRepository.findUserByUsername(username);
-        return toUserDTO(user);
+        return toUserDetailDTO(user);
     }
 
     @Override
@@ -100,26 +129,25 @@ public class UserServiceImpl implements UserDetailsService, UserService {
     }
 
 
-
     @Override
     public OtpResDto getOtp(GetOtpDto getOtpDto) {
         Optional<User> user = Optional.ofNullable(userRepository.findUserByEmail(getOtpDto.getEmail()));
         if (!user.isPresent()) {
-           throw new ApiRequestException("Người dùng chưa có trong hệ thống.");
+            throw new ApiRequestException("Người dùng chưa có trong hệ thống.");
         }
         User userInfo = user.get();
         Date expTime = new Date(System.currentTimeMillis() + expireTime);
-        String password = String.valueOf(Generating.generatePassword(12,true));
+        String password = String.valueOf(Generating.generatePassword(12, true));
         userInfo.setOne_time_password(passwordEncoder.encode(password));
         userInfo.setExpire_time(expTime);
         userRepository.save(userInfo);
-        OtpResDto otpResDto  = new OtpResDto();
+        OtpResDto otpResDto = new OtpResDto();
         otpResDto.setOtp(password);
         otpResDto.setExpTime(expTime);
         return otpResDto;
     }
 
-    public CredentialDto loginWithOTP(LoginEmailPasswordDto loginDto)  {
+    public CredentialDto loginWithOTP(LoginEmailPasswordDto loginDto) {
         Optional<User> user = Optional.ofNullable(userRepository.findUserByEmail(loginDto.getEmail()));
         if (!user.isPresent()) {
             throw new ApiRequestException("Người dùng chưa có trong hệ thống.");
@@ -133,7 +161,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         String authorities = getAuthority(userInfo).stream()
                 .map(GrantedAuthority::getAuthority)
                 .collect(Collectors.joining(","));
-        final String token = jwtTokenUtil.generateTokenCustom(userInfo.getEmail(),authorities);
+        final String token = jwtTokenUtil.generateTokenCustom(userInfo.getEmail(), authorities);
         return CredentialDto.builder()
                 .accessToken(token)
                 .expiresIn(System.currentTimeMillis() + TokenProvider.ONE_DAY * 7)
@@ -165,22 +193,44 @@ public class UserServiceImpl implements UserDetailsService, UserService {
         System.out.println(userInfo);
         return findUserByEmail(userInfo.toString());
     }
-
-    ;
-
-    @Override
-    public UserInfoDto toUserDTO(User user) {
+    public UserInfoDto toUserDetailDTO(User user) {
         return UserInfoDto.builder()
+                .uuid(user.getUuid())
                 .avatar(user.getAvatar())
                 .name(user.getName())
                 .username(user.getUsername())
                 .username(user.getUsername())
-                .email(user.getEmail())
+//                .email(user.getEmail())
                 .createdAt(user.getCreatedAt())
                 .build();
     }
 
-    public AuthorForPostDto toAuthorForPostDto(User user){
+    @Override
+    public MyInfoDto toUserDTO(User user) {
+        String authorities = getAuthority(user).stream()
+                .map(GrantedAuthority::getAuthority)
+                .collect(Collectors.joining(","));
+        final String token = jwtTokenUtil.generateTokenCustom(user.getEmail(), authorities);
+        CredentialDto credentialDto = CredentialDto.builder()
+                .accessToken(token)
+                .expiresIn(System.currentTimeMillis() + TokenProvider.ONE_DAY * 7)
+                .tokenType("Bearer")
+                .scope("basic_info")
+                .build();
+        return MyInfoDto.builder()
+                .uuid(user.getUuid())
+                .avatar(user.getAvatar())
+                .username(user.getUsername())
+                .name(user.getName())
+                .email(user.getEmail())
+                .updatedAt(user.getUpdatedAt())
+                .createdAt(user.getCreatedAt())
+                .userStatus(user.getStatus())
+                .credential(credentialDto)
+                .build();
+    }
+
+    public AuthorForPostDto toAuthorForPostDto(User user) {
         return AuthorForPostDto.builder()
                 .avatar(user.getAvatar())
                 .name(user.getName())

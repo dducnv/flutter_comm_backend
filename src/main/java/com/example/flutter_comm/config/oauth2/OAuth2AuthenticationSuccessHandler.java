@@ -31,18 +31,18 @@ import static com.example.flutter_comm.config.oauth2.HttpCookieOAuth2Authorizati
 public class OAuth2AuthenticationSuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
     private HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository;
-    @Autowired
     AuthenticationManager authenticationManager;
     private AppProperties appProperties;
-    @Autowired
     UserRepository accountRepository;
-    @Autowired
     private TokenProvider jwtTokenUtil;
     @Autowired
-    OAuth2AuthenticationSuccessHandler( AppProperties appProperties,
-                                       HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository) {
+    OAuth2AuthenticationSuccessHandler(AppProperties appProperties,
+                                       HttpCookieOAuth2AuthorizationRequestRepository httpCookieOAuth2AuthorizationRequestRepository, AuthenticationManager authenticationManager, UserRepository accountRepository, TokenProvider jwtTokenUtil) {
         this.appProperties = appProperties;
         this.httpCookieOAuth2AuthorizationRequestRepository = httpCookieOAuth2AuthorizationRequestRepository;
+        this.authenticationManager = authenticationManager;
+        this.accountRepository = accountRepository;
+        this.jwtTokenUtil = jwtTokenUtil;
     }
 
     @Override

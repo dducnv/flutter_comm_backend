@@ -22,6 +22,8 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.annotation.Resource;
 
+import static com.example.flutter_comm.config.constant.routes.apiv1.ClientRoutes.*;
+
 @Configuration
 @EnableWebSecurity
 @EnableGlobalMethodSecurity(prePostEnabled = true)
@@ -53,10 +55,13 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .authorizeRequests()
                 .antMatchers(
-                        "/api/v1/test/**",
-                        "/api/v1/post/**",
-                        "/api/v1/search/**",
-                        "/api/v1/otp/**"
+                        USER_DETAILS_PAM,
+                        POSTS_GET_ALL_PAM,
+                        POSTS_GET_DETAILS_ALL_PAM,
+                        COMMENTS_OF_POST_GET_ALL_PAM,
+                        COMMENTS_SEE_MORE_PAM,
+                        COMMENTS_SEE_DETAILS_PAM,
+                        POST_REACTIONS_GET_PAM
                 ).permitAll()
                 .anyRequest().authenticated()
                 .and()

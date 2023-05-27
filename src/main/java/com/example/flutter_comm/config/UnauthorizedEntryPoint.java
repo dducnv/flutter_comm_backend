@@ -1,5 +1,6 @@
 package com.example.flutter_comm.config;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,14 @@ public class UnauthorizedEntryPoint implements AuthenticationEntryPoint, Seriali
 
     @Override
     public void commence(HttpServletRequest request, HttpServletResponse response, AuthenticationException authException) throws IOException {
-        response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Unauthorized");
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        response.setContentType("application/json");
+
+        String errorMessage = "Invalid token, or it exp!";
+        ObjectMapper objectMapper = new ObjectMapper();
+        String errorJson = objectMapper.writeValueAsString(errorMessage);
+
+        response.getWriter().write(errorJson);
     }
 
 }

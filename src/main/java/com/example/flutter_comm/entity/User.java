@@ -6,13 +6,12 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Type;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.Date;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 
 @Entity
 @Builder
@@ -25,7 +24,6 @@ public class User  {
 
     //information
     @Id
-    @JsonIgnore
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name="id")
     private Long id;
@@ -41,6 +39,9 @@ public class User  {
     @JsonIgnore
     @Column(name="user_bio")
     private String bio;
+    @Column(name = "user_uuid", columnDefinition = "char(36)")
+    @Type(type = "org.hibernate.type.UUIDCharType")
+    private UUID uuid;
 
     //for otp login
     @JsonIgnore
@@ -74,7 +75,8 @@ public class User  {
     private LocalDateTime updatedAt;
     @Column(name="user_status")
     private UserStatus status;
-
+    @OneToMany(mappedBy = "user",fetch = FetchType.EAGER)
+    private List<TopicInterest> topicInterest = new ArrayList<>();
     //relationship
     @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.EAGER)
     @JsonIgnoreProperties("roles")
