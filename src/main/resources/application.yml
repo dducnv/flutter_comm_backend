@@ -44,24 +44,12 @@ spring:
       client:
         registration:
           google:
-            clientId: 231594476721-09kl84i5027sobd67pnnmk5fke1hetfi.apps.googleusercontent.com
-            clientSecret: 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
+            clientId: 896578212739-iegso6m171kh23ak70ect9dpa9ies55u.apps.googleusercontent.com
+            clientSecret: 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
             redirectUri: "https://fluttercomm-jdlir.appengine.bfcplatform.vn/oauth2/callback/{registrationId}"
             scope:
               - email
               - profile
-          facebook:
-            clientId: 743050937261336
-            clientSecret: 6978c5d20c9fad8cac6042989ffa4e48
-            redirectUri: "https://fluttercomm-jdlir.appengine.bfcplatform.vn/oauth2/callback/{registrationId}"
-            scope:
-              - email
-              - public_profile
-        provider:
-          facebook:
-            authorizationUri: https://www.facebook.com/v16.0/dialog/oauth
-            tokenUri: https://graph.facebook.com/v16.0/oauth/access_token
-            userInfoUri: https://graph.facebook.com/v16.0/me?fields=id,first_name,middle_name,last_name,name,email,verified,is_verified,picture.width(250).height(250)
 allowed:
   origin: http://localhost:3000
 
