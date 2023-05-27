@@ -8,6 +8,7 @@ public class ClientRoutes {
 
 
     public static final String PREFIX_SEARCH_PATH = "/search";
+    public static final String SEARCH_PAM = PREFIX_API_V1.concat(PREFIX_SEARCH_PATH+"/**");
 
 
     //post (param: page, type<posts,questions,discussion,job>, sort<all, suggest>)

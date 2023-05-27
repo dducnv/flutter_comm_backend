@@ -55,6 +55,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .authorizeRequests()
                 .antMatchers(
+                        SEARCH_PAM,
                         USER_DETAILS_PAM,
                         POSTS_GET_ALL_PAM,
                         POSTS_GET_DETAILS_ALL_PAM,
