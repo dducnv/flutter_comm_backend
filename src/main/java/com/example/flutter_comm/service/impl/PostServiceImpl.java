@@ -100,7 +100,7 @@ public class PostServiceImpl implements PostService {
 
     @Cacheable(value = "posts", key = "#pageNum + '-' + #pageSize+'-'+#type + '-'+ #tags.trim().length() == 0 ? 'emptyTag' : #tags")
     public Page<PostGetDto> getPosts(int pageNum, int pageSize, PostType type, String tags) {
-        Pageable pageable = PageRequest.of(pageNum, pageSize);
+        Pageable pageable = PageRequest.of(pageNum-1, pageSize);
         Page<Post> postGetListDto;
         Category category;
         Set<Tag> tagSet = null;

@@ -17,10 +17,10 @@ import java.util.UUID;
 
 @Repository
 public interface PostRepository  extends JpaRepository<Post, Long> {
-    @Where(clause = "post_public=true")
+//    @Where(clause = "post_public=true")
     @Query("SELECT p FROM Post p WHERE " +
             "p.title LIKE CONCAT('%',:query, '%')" +
-            "Or p.content LIKE CONCAT('%', :query, '%')")
+            "Or p.content LIKE CONCAT('%', :query, '%') ORDER BY p.createdAt DESC")
     Page<Post> findSearchPost(String query,Pageable pageable);
     @Where(clause = "post_public=true")
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
