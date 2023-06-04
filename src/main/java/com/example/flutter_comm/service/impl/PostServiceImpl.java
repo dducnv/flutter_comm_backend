@@ -102,7 +102,7 @@ public class PostServiceImpl implements PostService {
     public Page<PostGetDto> getPosts(int pageNum, int pageSize, PostType type, String tags) {
         Pageable pageable = PageRequest.of(pageNum-1, pageSize);
         Page<Post> postGetListDto;
-        Category category;
+        List<Category> category = categoryService.categorySeedList();
         Set<Tag> tagSet = null;
         if(tags != null && !tags.isEmpty()) {
             List<Tag> tagList = tagService.findTagBySlugs(tags);
@@ -110,27 +110,24 @@ public class PostServiceImpl implements PostService {
         }
         switch (type) {
             case posts:
-                category = categoryService.categorySeedList().get(1);
                 if(tagSet != null){
-                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category, pageable);
+                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category.get(1), pageable);
                 }else {
-                    postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category, pageable);
+                    postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category.get(1), pageable);
                 }
                 return postGetListDto.map(this::toPostGetDto);
             case questions:
-                category = categoryService.categorySeedList().get(0);
                 if(tagSet != null){
-                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category, pageable);
+                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category.get(0), pageable);
                 }else {
-                    postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category, pageable);
+                    postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category.get(0), pageable);
                 }
                 return postGetListDto.map(this::toPostGetDto);
             case discussion:
-                category = categoryService.categorySeedList().get(2);
                 if(tagSet != null){
-                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category, pageable);
+                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category.get(2), pageable);
                 }else {
-                    postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category, pageable);
+                    postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category.get(2), pageable);
                 }
                 return postGetListDto.map(this::toPostGetDto);
             default:
