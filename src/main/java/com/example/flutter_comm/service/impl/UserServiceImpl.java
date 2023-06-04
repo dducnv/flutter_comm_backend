@@ -226,6 +226,7 @@ public class UserServiceImpl implements UserDetailsService, UserService {
                 .updatedAt(user.getUpdatedAt())
                 .createdAt(user.getCreatedAt())
                 .userStatus(user.getStatus())
+                .isSuggest(!user.getTopicInterest().isEmpty())
                 .credential(credentialDto)
                 .build();
     }

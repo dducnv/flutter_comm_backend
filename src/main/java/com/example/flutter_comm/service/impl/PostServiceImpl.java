@@ -12,7 +12,6 @@ import com.example.flutter_comm.dto.reaction.ReactionStatusResDto;
 import com.example.flutter_comm.dto.tag.TagGetDto;
 import com.example.flutter_comm.dto.user.UserCommentDto;
 import com.example.flutter_comm.entity.*;
-import com.example.flutter_comm.entity.my_enum.PostSort;
 import com.example.flutter_comm.entity.my_enum.PostType;
 import com.example.flutter_comm.exception.ApiRequestException;
 import com.example.flutter_comm.repository.PostRepository;
@@ -71,51 +70,71 @@ public class PostServiceImpl implements PostService {
         this.topicInterestService = topicInterestService;
         this.cacheManager = cacheManager;
     }
-
-    @Cacheable(value = "posts", key = "#pageNum + '-' + #pageSize+'-'+#type+'-'+#sort")
-    public Page<PostGetDto> getPosts(int pageNum, int pageSize, PostType type, PostSort sort) {
+    public Page<PostGetDto> getSuggestPost(int pageNum, int pageSize, PostType type){
         User user = userService.getUserFromToken();
         List<Tag> tagInterest = null;
         Pageable pageable = PageRequest.of(pageNum, pageSize, Sort.by("createdAt").descending());
-        Page<Post> postGetListDto = null;
+        Page<Post> postGetListDto;
         if (user != null && user.getTopicInterest() != null) {
             tagInterest = user.getTopicInterest().stream().map(TopicInterest::getTag).collect(Collectors.toList());
         }
-        if (sort == PostSort.suggest && user == null) {
+        if (user == null) {
             throw new ApiRequestException("Vui lòng đăng nhập!");
         }
+        List<Category> category = categoryService.categorySeedList();
+        switch (type) {
+            case posts:
+                postGetListDto = postRepository.findByTagsInAndCategoryOrderByTagsDescViewCountDesc(tagInterest, category.get(1), pageable);
+                return postGetListDto.map(this::toPostGetDto);
+            case questions:
+                postGetListDto = postRepository.findByTagsInAndCategoryOrderByTagsDesc(tagInterest, category.get(0), pageable);
+                return postGetListDto.map(this::toPostGetDto);
+            case discussion:
+                postGetListDto = postRepository.findByTagsInAndCategoryOrderByTagsDesc(tagInterest, category.get(2), pageable);
+                return postGetListDto.map(this::toPostGetDto);
+            default:
+                throw new ApiRequestException("Không tìm thấy loại bài viết!");
+
+        }
+    }
+
+    @Cacheable(value = "posts", key = "#pageNum + '-' + #pageSize+'-'+#type + '-'+ #tags.trim().length() == 0 ? 'emptyTag' : #tags")
+    public Page<PostGetDto> getPosts(int pageNum, int pageSize, PostType type, String tags) {
+        Pageable pageable = PageRequest.of(pageNum, pageSize);
+        Page<Post> postGetListDto;
         Category category;
+        Set<Tag> tagSet = null;
+        if(tags != null && !tags.isEmpty()) {
+            List<Tag> tagList = tagService.findTagBySlugs(tags);
+            tagSet = new HashSet<>(tagList);
+        }
         switch (type) {
             case posts:
                 category = categoryService.categorySeedList().get(1);
-                if (sort == PostSort.suggest) {
-                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByTagsDescViewCountDesc(tagInterest, category, pageable);
-                } else {
+                if(tagSet != null){
+                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category, pageable);
+                }else {
                     postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category, pageable);
                 }
                 return postGetListDto.map(this::toPostGetDto);
             case questions:
                 category = categoryService.categorySeedList().get(0);
-                if (sort == PostSort.suggest) {
-                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByTagsDesc(tagInterest, category, pageable);
-                } else {
+                if(tagSet != null){
+                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category, pageable);
+                }else {
                     postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category, pageable);
                 }
                 return postGetListDto.map(this::toPostGetDto);
             case discussion:
                 category = categoryService.categorySeedList().get(2);
-                if (sort == PostSort.suggest) {
-                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByTagsDesc(tagInterest, category, pageable);
-                } else {
+                if(tagSet != null){
+                    postGetListDto = postRepository.findByTagsInAndCategoryOrderByCreatedAtDesc(tagSet, category, pageable);
+                }else {
                     postGetListDto = postRepository.findAllByCategoryOrderByCreatedAtDesc(category, pageable);
                 }
                 return postGetListDto.map(this::toPostGetDto);
             default:
-                if (sort == PostSort.suggest) {
-                    postGetListDto = postRepository.findByTagsInOrderByCreatedAtDesc(tagInterest, pageable);
-                } else {
-                    postGetListDto = postRepository.findAllByOrderByCreatedAtDesc(pageable);
-                }
+                postGetListDto = postRepository.findAllByOrderByCreatedAtDesc(pageable);
                 return postGetListDto.map(this::toPostGetDto);
         }
     }
@@ -132,7 +151,6 @@ public class PostServiceImpl implements PostService {
 
         return toPostDetailDto(post.get());
     }
-
     @Override
     @CacheEvict(value = {"posts"}, allEntries = true)
     public boolean save(PostSaveDto postSaveDto) {
@@ -149,7 +167,9 @@ public class PostServiceImpl implements PostService {
                     .category(postSaveDto.getCategory())
                     .uuid(uuid)
                     .author(user)
+                    .postPublic(true)
                     .description(descSave)
+                    .status("ACTIVE")
                     .build();
             postRepository.save(postSave);
             return true;
@@ -232,7 +252,7 @@ public class PostServiceImpl implements PostService {
     }
 
 //    @CacheEvict(value = "getReaction", key = "#uuid")
-    public ReactionStatusResDto postReaction(UUID uuid, ReactionDto reactionDto) {
+    public ReactionStatusResDto postReaction(UUID uuid, ReactionDto reactionDto)    {
         User user = userService.getUserFromToken();
         Post post = getByUUid(uuid);
         return reactionService.addReactionToPost(post, reactionDto, user);
@@ -242,23 +262,30 @@ public class PostServiceImpl implements PostService {
         Optional<PostView> isViewed = Optional.ofNullable(postViewRepository.findByPostAndIpAddress(post, ipAddress));
         LocalDateTime cutoff = LocalDateTime.now().minus(Duration.ofMinutes(15));
         if (!isViewed.isPresent()) {
-            post.setViewCount(post.getViewCount() + 1);
-            postRepository.save(post);
-            PostView postView = new PostView();
-            postView.setPost(post);
-            postView.setIpAddress(ipAddress);
-            postViewRepository.save(postView);
-
+            updateViewCountWhenIsNotPresent(post, ipAddress);
         } else {
             if (isViewed.get().getCreatedAt().isBefore(cutoff)) {
-                post.setViewCount(post.getViewCount() + 1);
-                postRepository.save(post);
+                updateViewCountWhenIsPresent(post);
             }
         }
 
     }
+    @CacheEvict(value = {"posts"}, allEntries = true)
+    public void updateViewCountWhenIsNotPresent(Post post,String ipAddress){
+        post.setViewCount(post.getViewCount() + 1);
+        postRepository.save(post);
+        PostView postView = new PostView();
+        postView.setPost(post);
+        postView.setIpAddress(ipAddress);
+        postViewRepository.save(postView);
+    }
 
+    @CacheEvict(value = {"posts"}, allEntries = true)
+    public void updateViewCountWhenIsPresent(Post post){
 
+            post.setViewCount(post.getViewCount() + 1);
+            postRepository.save(post);
+    }
     public PostGetDto toPostGetDto(Post post) {
         List<TagGetDto> tagGetDtoList = post.getTags().stream()
                 .map(it -> tagService.toTagGetDto(it))
@@ -278,7 +305,7 @@ public class PostServiceImpl implements PostService {
                 .category(categoryService.toCategoryGetDto(post.getCategory()))
                 .tags(tagGetDtoList)
                 .reactions(reactionGetDtoList)
-                .isPublic(post.isPostPublic())
+                .isPublished(post.isPostPublic())
                 .usersComment(getUserCommentOfPost(post.getCommentPosts()))
                 .createdAt(post.getCreatedAt())
                 .build();

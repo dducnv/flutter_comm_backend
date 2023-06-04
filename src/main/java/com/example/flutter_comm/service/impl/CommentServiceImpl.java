@@ -68,6 +68,7 @@ public class CommentServiceImpl {
             evict = {
                     @CacheEvict(value = "getCommentOfPost", key = "#commentReplyDto.parent_uuid + '-' +#post_uuid"),
                     @CacheEvict(value = "getCommentOfPost", key = "#post_uuid"),
+                    @CacheEvict(value = {"posts"}, allEntries = true)
             }
     )
     public CommentGetDto addReply(CommentReplyDto commentReplyDto, UUID post_uuid) {
@@ -103,11 +104,16 @@ public class CommentServiceImpl {
                 .build();
     }
 
-    @CacheEvict(value = "getCommentOfPost", key = "#post_uuid")
+    @Caching(
+            evict = {
+                    @CacheEvict(value = "getCommentOfPost", key = "#post_uuid"),
+                    @CacheEvict(value = {"posts"}, allEntries = true)
+            }
+    )
+
     public CommentGetDto addComment(CommentSaveDto comment, UUID post_uuid) {
         User user = userService.getUserFromToken();
         Post post = postService.getByUUid(post_uuid);
-
         UUID uuid = UUID.randomUUID();
         CommentPost commentPost = new CommentPost();
         commentPost.setContent(comment.getContent());

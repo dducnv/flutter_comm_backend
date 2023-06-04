@@ -25,6 +25,7 @@ public class MyInfoDto {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private UserStatus userStatus;
+    private boolean isSuggest;
     private CredentialDto credential;
 
 }

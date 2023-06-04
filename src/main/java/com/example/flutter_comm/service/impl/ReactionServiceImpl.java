@@ -81,6 +81,7 @@ public class ReactionServiceImpl implements ReactionService {
 
 
     @Override
+    @CacheEvict(value = {"posts"}, allEntries = true)
     public ReactionStatusResDto addReactionToPost(Post post, ReactionDto reactionDto, User user) {
         //dto to entity
         List<ReactionSeed> reactionSeeds = reactionSeedList();

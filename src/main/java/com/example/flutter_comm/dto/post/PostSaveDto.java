@@ -26,4 +26,6 @@ public class PostSaveDto {
     @NotBlank
     @NotNull
     private Category category;
+    @NotNull
+    private boolean isPublished = Boolean.TRUE;
 }

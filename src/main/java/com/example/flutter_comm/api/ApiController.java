@@ -25,8 +25,8 @@ public class ApiController {
     }
 
     @RequestMapping(value = PREFIX_SEARCH_PATH, method = RequestMethod.GET)
-    public ResponseEntity<?> search(@RequestParam(name = "q", defaultValue = "") String keyword) {
-        return ResponseEntity.ok(appService.searchPost(keyword));
+    public ResponseEntity<?> search(@RequestParam(name = "q", defaultValue = "") String keyword, @RequestParam(defaultValue = "1") int page) {
+        return ResponseEntity.ok(appService.searchPost(keyword, page, 10));
     }
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @RequestMapping(value = "/report", method = RequestMethod.POST)

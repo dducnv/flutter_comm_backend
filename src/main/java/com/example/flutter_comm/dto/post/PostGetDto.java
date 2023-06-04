@@ -26,13 +26,13 @@ public class PostGetDto {
     private List<TagGetDto> tags = new ArrayList<>();
     private List<ReactionGetDto> reactions = new ArrayList<>();
     private AuthorForPostDto author;
-    private boolean isPublic;
+    private boolean isPublished;
     private int viewCount;
     private int commentCount;
     private int reactionCount;
     private List<UserCommentDto> usersComment;
     private LocalDateTime createdAt;
-    public PostGetDto(UUID uuid,String title, String slug, String description, CategoryGetDto category, List<TagGetDto> tags, List<ReactionGetDto> reactions, AuthorForPostDto author, boolean isPublic, int viewCount, int commentCount, int reactionCount,List<UserCommentDto> usersComment, LocalDateTime createdAt) {
+    public PostGetDto(UUID uuid,String title, String slug, String description, CategoryGetDto category, List<TagGetDto> tags, List<ReactionGetDto> reactions, AuthorForPostDto author, boolean isPublished, int viewCount, int commentCount, int reactionCount,List<UserCommentDto> usersComment, LocalDateTime createdAt) {
         this.uuid = uuid;
         this.title = title;
         this.slug = slug;
@@ -41,7 +41,7 @@ public class PostGetDto {
         this.tags = tags;
         this.reactions = reactions;
         this.author = author;
-        this.isPublic = isPublic;
+        this.isPublished = isPublished;
         this.viewCount = viewCount;
         this.commentCount = commentCount;
         for (ReactionGetDto it : reactions) {

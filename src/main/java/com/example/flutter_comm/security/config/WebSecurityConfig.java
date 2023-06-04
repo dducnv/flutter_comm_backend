@@ -22,6 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.annotation.Resource;
 
+import static com.example.flutter_comm.config.constant.routes.apiv1.AuthRoutes.OTP_AUTH_PAM;
 import static com.example.flutter_comm.config.constant.routes.apiv1.ClientRoutes.*;
 
 @Configuration
@@ -56,6 +57,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                 .authorizeRequests()
                 .antMatchers(
                         SEARCH_PAM,
+                        OTP_AUTH_PAM,
                         USER_DETAILS_PAM,
                         POSTS_GET_ALL_PAM,
                         POSTS_GET_DETAILS_ALL_PAM,

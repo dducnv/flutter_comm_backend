@@ -12,16 +12,20 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 @Repository
 public interface PostRepository  extends JpaRepository<Post, Long> {
     @Where(clause = "post_public=true")
-    List<Post> findByTitleContainingOrContentContaining(String title,String content);
+    Page<Post> findByTitleContainingOrContentContaining(String title,String content,Pageable pageable);
     @Where(clause = "post_public=true")
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
     @Where(clause = "post_public=true")
     Page<Post> findByTagsInOrderByCreatedAtDesc(List<Tag> tags, Pageable pageable);
+    @Where(clause = "post_public=true")
+    Page<Post> findByTagsInAndCategoryOrderByCreatedAtDesc(Set<Tag> tags, Category category, Pageable pageable);
+
     @Where(clause = "post_public=true")
     Page<Post> findAllByCategoryOrderByCreatedAtDesc(Category category,Pageable pageable);
     @Where(clause = "post_public=true")

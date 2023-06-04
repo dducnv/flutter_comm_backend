@@ -7,10 +7,13 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public interface TagRepository extends JpaRepository<Tag, Long> {
     boolean existsBySlug(String slug);
+
+    List<Tag> findAllBySlugIn(List<String> slugs);
     @Query("SELECT t, COUNT(p) as postCount FROM Tag t  LEFT JOIN t.posts p GROUP BY t ORDER BY postCount DESC")
     List<Tag> findAllOrderByPostCounts();
 

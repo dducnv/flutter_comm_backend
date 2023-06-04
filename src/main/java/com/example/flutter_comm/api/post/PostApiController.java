@@ -8,9 +8,7 @@ import com.example.flutter_comm.dto.post.PostUpdateDto;
 import com.example.flutter_comm.dto.reaction.ReactionDto;
 import com.example.flutter_comm.dto.reaction.ReactionResDto;
 import com.example.flutter_comm.dto.reaction.ReactionStatusResDto;
-import com.example.flutter_comm.entity.my_enum.PostSort;
 import com.example.flutter_comm.entity.my_enum.PostType;
-import com.example.flutter_comm.exception.ApiRequestException;
 import com.example.flutter_comm.service.impl.AppServiceImpl;
 import com.example.flutter_comm.service.impl.CategoryServiceImpl;
 import com.example.flutter_comm.service.impl.PostServiceImpl;
@@ -46,19 +44,11 @@ public class PostApiController {
     @RequestMapping(value = PREFIX_POST_API, method = RequestMethod.GET)
     public ResponseEntity<Page<PostGetDto>> getPosts(@RequestParam(defaultValue = "1") int page,
                                                      @RequestParam(defaultValue = "posts") String type,
-                                                     @RequestParam(defaultValue = "all") String sort
+                                                     @RequestParam(defaultValue = "") String tags
     ) {
-        try {
             PostType postType = PostType.valueOf(type);
-            PostSort postSort = PostSort.valueOf(sort);
-            return ResponseEntity.ok(postService.getPosts(page, 10, postType, postSort));
-        } catch (IllegalArgumentException ex) {
-            throw new ApiRequestException("Request Param không hợp lệ!");
-        } catch (ApiRequestException apiRequestException) {
-            throw new ApiRequestException(apiRequestException.getMessage());
-        } catch (RuntimeException runtimeException) {
-            throw new ApiRequestException("Có lỗi khi truy vấn dữ liệu, vui lòng thử lại!");
-        }
+            return ResponseEntity.ok(postService.getPosts(page, 10, postType, tags));
+
     }
     @RequestMapping(value = PREFIX_GET_POST_UN_PUBLIC_API, method = RequestMethod.GET)
     public ResponseEntity<Page<PostGetDto>> getPostsUnPublic(@RequestParam(defaultValue = "1") int page ) {

@@ -2,10 +2,9 @@ package com.example.flutter_comm.service;
 
 import com.example.flutter_comm.dto.post.PostGetDto;
 import com.example.flutter_comm.dto.report.ReportSaveDto;
-
-import java.util.List;
+import org.springframework.data.domain.Page;
 
 public interface AppService {
-    List<PostGetDto> searchPost(String keyword);
+    Page<PostGetDto> searchPost(String keyword, int page, int size);
     boolean reportSave(ReportSaveDto reportSaveDto);
 }

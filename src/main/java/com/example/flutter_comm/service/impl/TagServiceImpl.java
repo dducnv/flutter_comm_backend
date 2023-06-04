@@ -9,6 +9,7 @@ import com.example.flutter_comm.utils.SlugGenerating;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,11 @@ public class TagServiceImpl {
     public TagServiceImpl(TagRepository tagRepository, UserServiceImpl userService) {
         this.tagRepository = tagRepository;
         this.userService = userService;
+    }
+
+    public List<Tag> findTagBySlugs(String slug){
+        List<String> tagSlugs = Arrays.asList(slug.split(","));
+        return tagRepository.findAllBySlugIn(tagSlugs);
     }
 
     public List<Tag> tagSeedList(User userOptional) {
