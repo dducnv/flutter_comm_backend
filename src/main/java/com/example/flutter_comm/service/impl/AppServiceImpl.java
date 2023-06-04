@@ -61,7 +61,7 @@ public class AppServiceImpl implements AppService {
     @Override
     public Page<PostGetDto> searchPost(String keyword, int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
-        return postRepository.findByTitleContainingOrContentContaining(keyword, keyword,pageable).map(it-> postService.toPostGetDto(it));
+        return postRepository.findSearchPost(keyword,pageable).map(it-> postService.toPostGetDto(it));
     }
 
     @Override
