@@ -53,7 +53,7 @@ public class DatabaseSeeder {
     @EventListener
     public void seed(ContextRefreshedEvent event) {
 //        seedRoleTable();
-//        seedUser();
+//          seedUser();
 //        seedCategories();
 //        seedTags();
 //        seedEmoji();

@@ -6,9 +6,8 @@ import com.example.flutter_comm.entity.Tag;
 import com.example.flutter_comm.entity.User;
 import com.example.flutter_comm.repository.TagRepository;
 import com.example.flutter_comm.utils.SlugGenerating;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -129,20 +128,17 @@ public class TagServiceImpl {
                 .build());
         return tagSeederList;
     }
+    @Cacheable(value = "posts")
 
     public List<TagInfoDto> getList(String name) {
-        Pageable pageable = PageRequest.of(0, 10);
         if (!name.isEmpty()) {
-            Page<Tag> tagPage = tagRepository.findTagByNameCountPosts(name , pageable);
-            List<Tag> tags = tagPage.getContent();
-            return tags.stream().map(this::toTagInfoDto).collect(Collectors.toList());
+            List<Tag> tagPage = tagRepository.findTagByNameCountPosts(name );
+            return tagPage.stream().map(this::toTagInfoDto).collect(Collectors.toList());
         }
-
-        Page<Tag> tagPage = tagRepository.findAllOrderByPostCounts(pageable);
-        List<Tag> tags = tagPage.getContent();
-        return tags.stream().map(this::toTagInfoDto).collect(Collectors.toList());
+        List<Tag> tagPage = tagRepository.findAllOrderByPostCounts();
+        return tagPage.stream().map(this::toTagInfoDto).collect(Collectors.toList());
     }
-
+    @CacheEvict(value = "posts", allEntries = true)
     public boolean save(TagGetDto tag) {
         User user = userService.getUserFromToken();
         String slug = SlugGenerating.toSlug(tag.getName());

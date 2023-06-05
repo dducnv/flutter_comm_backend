@@ -39,7 +39,7 @@ public class CountJob {
     }
 
     @Scheduled(cron = "0 0 1 3 * *")
-    @CacheEvict(value = {"getCommentOfPost","posts"}, allEntries = true)
+    @CacheEvict(value = {"getCommentOfPost","posts","tags"}, allEntries = true)
     public void clearComment() {
 
     }

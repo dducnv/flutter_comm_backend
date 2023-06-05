@@ -12,6 +12,6 @@ public class CachingConfig {
 
     @Bean
     public CacheManager cacheManager() {
-        return new ConcurrentMapCacheManager("posts", "getReaction","black_words","getCommentOfPost");
+        return new ConcurrentMapCacheManager("posts","tags", "getReaction","black_words","getCommentOfPost");
     }
 }
