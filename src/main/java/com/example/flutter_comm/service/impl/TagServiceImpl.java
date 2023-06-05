@@ -6,6 +6,9 @@ import com.example.flutter_comm.entity.Tag;
 import com.example.flutter_comm.entity.User;
 import com.example.flutter_comm.repository.TagRepository;
 import com.example.flutter_comm.utils.SlugGenerating;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -128,11 +131,16 @@ public class TagServiceImpl {
     }
 
     public List<TagInfoDto> getList(String name) {
+        Pageable pageable = PageRequest.of(0, 10);
         if (!name.isEmpty()) {
-            return tagRepository.findTagByNameCountPosts(name).stream().map(this::toTagInfoDto).collect(Collectors.toList());
+            Page<Tag> tagPage = tagRepository.findTagByNameCountPosts(name , pageable);
+            List<Tag> tags = tagPage.getContent();
+            return tags.stream().map(this::toTagInfoDto).collect(Collectors.toList());
         }
-        return tagRepository.findAllOrderByPostCounts().stream()
-                .map(this::toTagInfoDto).collect(Collectors.toList());
+
+        Page<Tag> tagPage = tagRepository.findAllOrderByPostCounts(pageable);
+        List<Tag> tags = tagPage.getContent();
+        return tags.stream().map(this::toTagInfoDto).collect(Collectors.toList());
     }
 
     public boolean save(TagGetDto tag) {
