@@ -10,7 +10,7 @@ public class ClientRoutes {
     public static final String PREFIX_SEARCH_PATH = "/search";
     public static final String SEARCH_PAM = PREFIX_API_V1.concat(PREFIX_SEARCH_PATH+"/**");
 
-
+    public static final String PREFIX_TAG = "/tags";
     //post (param: page, type<posts,questions,discussion,job>, sort<all, suggest>)
     public static final String PREFIX_POST_API = "/posts"; // get(get all), post (add new), delete( remove)
     public static final String PREFIX_GET_POST_UN_PUBLIC_API = "/posts/un_public"; // get(get all), post (add new), delete( remove)
