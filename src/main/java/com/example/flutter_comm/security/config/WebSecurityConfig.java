@@ -56,6 +56,7 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
         http.cors().and().csrf().disable()
                 .authorizeRequests()
                 .antMatchers(
+                        "/api/v1/tags/**",
                         SEARCH_PAM,
                         OTP_AUTH_PAM,
                         USER_DETAILS_PAM,
