@@ -12,12 +12,12 @@ spring:
   jackson:
     time-zone: Asia/Ho_Chi_Minh
   datasource:
-    url: jdbc:mysql://localhost:3306/flutter_comm?createDatabaseIfNotExist=true
-    username: root
-    password:
-#    url: jdbc:mysql://tcp.appengine.bfcplatform.vn:19056/flutter_community_db?createDatabaseIfNotExist=true
+#    url: jdbc:mysql://localhost:3306/flutter_comm?createDatabaseIfNotExist=true
 #    username: root
-#    password: fluttercomm2023
+#    password:
+    url: jdbc:mysql://tcp.appengine.bfcplatform.vn:19056/flutter_community_db?createDatabaseIfNotExist=true
+    username: root
+    password: fluttercomm2023
   mvc:
     pathmatch:
       matching-strategy: ant_path_matcher
