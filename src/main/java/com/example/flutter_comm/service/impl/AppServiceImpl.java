@@ -4,8 +4,10 @@ import com.example.flutter_comm.dto.BlackWorkDto;
 import com.example.flutter_comm.dto.post.PostGetDto;
 import com.example.flutter_comm.dto.report.ReportSaveDto;
 import com.example.flutter_comm.entity.BlackWord;
+import com.example.flutter_comm.entity.Category;
 import com.example.flutter_comm.entity.User;
 import com.example.flutter_comm.entity.UserReport;
+import com.example.flutter_comm.entity.my_enum.PostType;
 import com.example.flutter_comm.repository.BlackWordRepository;
 import com.example.flutter_comm.repository.PostRepository;
 import com.example.flutter_comm.repository.ReportRepository;
@@ -25,13 +27,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class AppServiceImpl implements AppService {
     PostRepository postRepository;
+    CategoryServiceImpl categoryService;
     BlackWordRepository blackWordRepository;
     UserServiceImpl userService;
     PostServiceImpl postService;
     ReportRepository reportRepository;
 
     @Autowired
-    public AppServiceImpl(PostRepository postRepository, BlackWordRepository blackWordRepository, ReportRepository reportRepository, UserServiceImpl userService, PostServiceImpl postService) {
+    public AppServiceImpl(PostRepository postRepository, BlackWordRepository blackWordRepository, ReportRepository reportRepository, UserServiceImpl userService, PostServiceImpl postService, CategoryServiceImpl categoryService) {
         this.postRepository = postRepository;
         this.blackWordRepository = blackWordRepository;
 
@@ -39,6 +42,7 @@ public class AppServiceImpl implements AppService {
         this.reportRepository = reportRepository;
         this.userService = userService;
         this.postService = postService;
+        this.categoryService = categoryService;
     }
 
     @Cacheable(value = "black_words")
@@ -58,9 +62,24 @@ public class AppServiceImpl implements AppService {
     ;
 
     @Override
-    public Page<PostGetDto> searchPost(String keyword, int page, int size) {
+    public Page<PostGetDto> searchPost(String keyword, PostType type, int page, int size) {
         Pageable pageable = PageRequest.of(page-1, size);
-        return postRepository.findSearchPost(keyword,pageable).map(it-> postService.toPostGetDto(it));
+        List<Category> categoryList = categoryService.categorySeedList();
+        Category categoryFilter ;
+        switch (type){
+            case questions:
+                categoryFilter = categoryList.get(0);
+                break;
+            case discussion:
+                categoryFilter = categoryList.get(2);
+                break;
+            case job:
+                categoryFilter = categoryList.get(3);
+                break;
+            default:
+                categoryFilter =  categoryList.get(1);
+        }
+        return postRepository.findSearchPost(keyword,categoryFilter,pageable).map(it-> postService.toPostGetDto(it));
     }
 
     @Override

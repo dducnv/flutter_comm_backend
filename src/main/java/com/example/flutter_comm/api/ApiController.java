@@ -1,6 +1,7 @@
 package com.example.flutter_comm.api;
 
 import com.example.flutter_comm.dto.report.ReportSaveDto;
+import com.example.flutter_comm.entity.my_enum.PostType;
 import com.example.flutter_comm.service.impl.AppServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,9 @@ public class ApiController {
     }
 
     @RequestMapping(value = PREFIX_SEARCH_PATH, method = RequestMethod.GET)
-    public ResponseEntity<?> search(@RequestParam(name = "q", defaultValue = "") String keyword, @RequestParam(defaultValue = "1") int page) {
-        return ResponseEntity.ok(appService.searchPost(keyword, page, 10));
+    public ResponseEntity<?> search(@RequestParam(name = "q", defaultValue = "") String keyword, @RequestParam(defaultValue = "1") int page, @RequestParam(defaultValue = "posts") String type) {
+        PostType postType = PostType.valueOf(type);
+        return ResponseEntity.ok(appService.searchPost(keyword, postType,page, 10));
     }
     @PreAuthorize("hasAnyRole('USER','ADMIN')")
     @RequestMapping(value = "/report", method = RequestMethod.POST)
