@@ -79,7 +79,7 @@ public class AppServiceImpl implements AppService {
             default:
                 categoryFilter =  categoryList.get(1);
         }
-        return postRepository.findSearchPost(keyword,categoryFilter,pageable).map(it-> postService.toPostGetDto(it));
+        return postRepository.findByTitleContainingOrContentContainingAndCategoryOrderByCreatedAt(keyword,keyword,categoryFilter,pageable).map(it-> postService.toPostGetDto(it));
     }
 
     @Override

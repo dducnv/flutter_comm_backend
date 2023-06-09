@@ -18,10 +18,8 @@ import java.util.UUID;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     @Where(clause = "post_public=true")
-    @Query("SELECT p FROM Post p WHERE " +
-            "(p.title LIKE CONCAT('%', :query, '%') OR p.content LIKE CONCAT('%', :query, '%')) " +
-            "AND p.category = :category ORDER BY p.createdAt DESC")
-    Page<Post> findSearchPost(String query, Category category, Pageable pageable);
+
+    Page<Post> findByTitleContainingOrContentContainingAndCategoryOrderByCreatedAt(String title, String content,Category category, Pageable pageable);
 
     @Where(clause = "post_public=true")
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
