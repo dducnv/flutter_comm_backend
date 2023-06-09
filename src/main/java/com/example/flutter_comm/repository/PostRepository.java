@@ -16,31 +16,39 @@ import java.util.Set;
 import java.util.UUID;
 
 @Repository
-public interface PostRepository  extends JpaRepository<Post, Long> {
-//    @Where(clause = "post_public=true")
+public interface PostRepository extends JpaRepository<Post, Long> {
+    @Where(clause = "post_public=true")
     @Query("SELECT p FROM Post p WHERE " +
-            "p.title LIKE CONCAT('%',:query, '%')" +
-            "Or p.content LIKE CONCAT('%', :query, '%') AND p.category = :category  ORDER BY p.createdAt DESC")
-    Page<Post> findSearchPost(String query, Category category,Pageable pageable);
+            "(p.title LIKE CONCAT('%', :query, '%') OR p.content LIKE CONCAT('%', :query, '%')) " +
+            "AND p.category = :category ORDER BY p.createdAt DESC")
+    Page<Post> findSearchPost(String query, Category category, Pageable pageable);
+
     @Where(clause = "post_public=true")
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
+
     @Where(clause = "post_public=true")
     Page<Post> findByTagsInOrderByCreatedAtDesc(List<Tag> tags, Pageable pageable);
+
     @Where(clause = "post_public=true")
     Page<Post> findByTagsInAndCategoryOrderByCreatedAtDesc(Set<Tag> tags, Category category, Pageable pageable);
 
     @Where(clause = "post_public=true")
-    Page<Post> findAllByCategoryOrderByCreatedAtDesc(Category category,Pageable pageable);
+    Page<Post> findAllByCategoryOrderByCreatedAtDesc(Category category, Pageable pageable);
+
     @Where(clause = "post_public=true")
     Post findFirstBySlug(String slug);
+
     @Where(clause = "post_public=true")
     Post findFirstByUuid(UUID uuid);
 
-    Post findFirstBySlugAndCategory(String slug,Category category);
+    Post findFirstBySlugAndCategory(String slug, Category category);
+
     @Query(value = "SELECT p FROM Post p WHERE  p.postPublic = false ")
     Page<Post> findPostUnPublic(Pageable pageable);
+
     @Where(clause = "post_public=true")
-    Page<Post> findByTagsInAndCategoryOrderByTagsDescViewCountDesc(List<Tag> tags,Category category, Pageable pageable);
+    Page<Post> findByTagsInAndCategoryOrderByTagsDescViewCountDesc(List<Tag> tags, Category category, Pageable pageable);
+
     @Where(clause = "post_public=true")
     Page<Post> findByTagsInAndCategoryOrderByTagsDesc(List<Tag> tags, Category category, Pageable pageable);
 
