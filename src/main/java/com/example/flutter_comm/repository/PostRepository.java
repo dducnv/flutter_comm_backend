@@ -19,7 +19,7 @@ import java.util.UUID;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     @Where(clause = "post_public=true")
-    @Query(value="SELECT p FROM Post p WHERE (p.title LIKE CONCAT('%', :title, '%') OR p.content LIKE  CONCAT('%', :content, '%') ) AND p.category = :category ORDER BY CASE WHEN p.title LIKE :title THEN 0 ELSE 1 END, LENGTH(p.title)")
+    @Query(value="SELECT p FROM Post p WHERE (p.title LIKE CONCAT('%', :title, '%') OR p.content LIKE  CONCAT('%', :content, '%') ) AND p.category = :category ORDER BY CASE WHEN p.title LIKE :title THEN 0  WHEN p.content LIKE :content THEN 0 ELSE 1 END, LENGTH(p.title)")
     Page<Post> searchPost(@Param("title") String title, @Param("content") String content, @Param("category") Category category, Pageable pageable);
 
     @Where(clause = "post_public=true")
