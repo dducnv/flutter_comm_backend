@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -18,8 +19,8 @@ import java.util.UUID;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     @Where(clause = "post_public=true")
-    @Query("SELECT p FROM Post p WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) AND p.category = :category ORDER BY CASE WHEN p.title LIKE :keyword THEN 0 ELSE 1 END, LENGTH(p.title)")
-    Page<Post> searchPort(String keyword,Category category, Pageable pageable);
+    @Query(value="SELECT p FROM Post p WHERE (p.title LIKE CONCAT('%', :title, '%') OR p.content LIKE  CONCAT('%', :content, '%') ) AND p.category = :category ORDER BY CASE WHEN p.title LIKE :title THEN 0 ELSE 1 END, LENGTH(p.title)", nativeQuery = true)
+    Page<Post> searchPost(@Param("title") String title, @Param("content") String content, @Param("category") Category category, Pageable pageable);
 
     @Where(clause = "post_public=true")
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
