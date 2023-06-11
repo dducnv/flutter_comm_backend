@@ -51,7 +51,7 @@ spring:
               - email
               - profile
 allowed:
-  origin: http://localhost:3000
+  origin: http://localhost:3000,https://fluttercommunityvn.vercel.app
 
 app:
   oauth2:
@@ -61,3 +61,4 @@ app:
     # We're not using cookies because they won't work well in mobile clients.
     authorizedRedirectUris:
       - http://localhost:3000/api/oauth2/redirect
+      - https://fluttercommunityvn.vercel.app/api/oauth2/redirect
