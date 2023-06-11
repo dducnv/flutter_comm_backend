@@ -18,8 +18,8 @@ import java.util.UUID;
 @Repository
 public interface PostRepository extends JpaRepository<Post, Long> {
     @Where(clause = "post_public=true")
-
-    Page<Post> findByTitleContainingOrContentContainingAndCategoryOrderByCreatedAt(String title, String content,Category category, Pageable pageable);
+    @Query("SELECT p FROM Post p WHERE (p.title LIKE %:keyword% OR p.content LIKE %:keyword%) AND p.category = :category ORDER BY CASE WHEN p.title LIKE :keyword THEN 0 ELSE 1 END, LENGTH(p.title)")
+    Page<Post> searchPort(String keyword,Category category, Pageable pageable);
 
     @Where(clause = "post_public=true")
     Page<Post> findAllByOrderByCreatedAtDesc(Pageable pageable);
