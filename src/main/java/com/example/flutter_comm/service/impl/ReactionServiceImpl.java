@@ -130,7 +130,7 @@ public class ReactionServiceImpl implements ReactionService {
     @Override
     @Caching(
             evict = {
-                    @CacheEvict(value = "getCommentOfPost", key = "#commentPost.parent != null?commentPost.parent.uuid:''  + '-' +#commentPost.post.uuid"),
+//                    @CacheEvict(value = "getCommentOfPost", key = "#commentPost.parent != null?commentPost.parent.uuid:''  + '-' +#commentPost.post.uuid"),
                     @CacheEvict(value = "getCommentOfPost", key = "#commentPost.post.uuid")
             }
     )
