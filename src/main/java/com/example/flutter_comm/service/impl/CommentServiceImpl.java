@@ -17,6 +17,7 @@ import org.springframework.cache.annotation.Caching;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -99,7 +100,7 @@ public class CommentServiceImpl {
                 .content(commentReplyPost.getContent())
                 .user(userService.toAuthorForPostDto(commentReplyPost.getUser()))
                 .replyCount(commentReplyPost.getReplies() == null ? 0 : commentReplyPost.getReplies().size())
-                .parentComment(toCommentDto(commentParentGet, user))
+                .parentComment(commentParentDto(commentParentGet))
                 .countReplyForParent(commentParentGet.getReplies().size())
                 .build();
     }
@@ -231,7 +232,7 @@ public class CommentServiceImpl {
                     .user(userService.toAuthorForPostDto(userIsDelete))
                     .build();
         }
-        List<CommentGetDto> commentOfSupper = null;
+        List<CommentGetDto> commentOfSupper = new ArrayList<>();
         if (!commentPost.getListOfSupperComment().isEmpty()) {
             commentOfSupper = commentPost.getListOfSupperComment().stream().map(it -> toCommentDto(it, user)).collect(Collectors.toList());
         }

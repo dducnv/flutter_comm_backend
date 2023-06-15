@@ -35,9 +35,9 @@ public class Post {
     @Column(name = "post_uuid", columnDefinition = "char(36)")
     @Type(type = "org.hibernate.type.UUIDCharType")
     private UUID uuid;
-    @Column(columnDefinition = "text", name = "post_content")
+    @Column(columnDefinition = "longtext", name = "post_content")
     private String content;
-    @Column(columnDefinition = "text",name = "post_desc")
+    @Column(columnDefinition = "longtext",name = "post_desc")
     private String description;
     @Column(columnDefinition = "int(11) default 0", name = "view_count")
     private int viewCount;

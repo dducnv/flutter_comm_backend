@@ -53,7 +53,7 @@ public class DatabaseSeeder {
     @EventListener
     public void seed(ContextRefreshedEvent event) {
 //        seedRoleTable();
-//          seedUser();
+//        seedUser();
 //        seedCategories();
 //        seedTags();
 //        seedEmoji();
@@ -193,6 +193,7 @@ tagSeederList.add(Tag.builder()
             user.setName("Nguyen Van Duc");
             userService.seedUserService(user);
         }
+
 
     }
 

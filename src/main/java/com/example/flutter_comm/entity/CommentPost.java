@@ -25,6 +25,7 @@ public class CommentPost {
     @Column(name="id")
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(columnDefinition = "longtext")
     private String content;
     @Column(name = "comment_uuid", columnDefinition = "char(36)",unique = true)
     @Type(type = "org.hibernate.type.UUIDCharType")
