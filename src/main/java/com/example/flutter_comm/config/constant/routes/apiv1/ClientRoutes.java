@@ -25,6 +25,8 @@ public class ClientRoutes {
     //comment
     public static final String PREFIX_COMMENT_API = "/comments";
     public static final String PREFIX_COMMENT_PARENT_API = "/{post_uuid}/comments";
+    public static final String PREFIX_COMMENT_GET_MORE_API = "/{post_uuid}/comments/more";
+    public static final String PREFIX_COMMENT_REPLY_GET_MORE_API = "/{post_uuid}/comments/{parent_uuid}/reply/more";
     public static final String PREFIX_COMMENT_REPLY_GET_API = "/{post_uuid}/comments/{parent_uuid}/reply";
     public static final String PREFIX_COMMENT_REPLY_API = "/{post_uuid}/comments/reply";
     public static final String PREFIX_COMMENT_DETAILS_API = "/comments/{uuid}/details";
@@ -32,6 +34,8 @@ public class ClientRoutes {
     //PAM
 
     public static final String COMMENTS_OF_POST_GET_ALL_PAM = PREFIX_API_V1.concat("/**/"+PREFIX_COMMENT_API);
+    public static final String COMMENTS_OF_POST_GET_MORE_PAM = PREFIX_API_V1.concat("/**/"+PREFIX_COMMENT_API+"/more");
+    public static final String COMMENTS_REPLY_OF_POST_GET_MORE_PAM = PREFIX_API_V1.concat("/**/"+PREFIX_COMMENT_API+"/reply/more");
     public static final String COMMENTS_SEE_MORE_PAM= PREFIX_API_V1.concat("/**/"+PREFIX_COMMENT_API+"/**/reply");
     public static final String COMMENTS_SEE_DETAILS_PAM= PREFIX_API_V1.concat(PREFIX_COMMENT_API+"/**/details");
 

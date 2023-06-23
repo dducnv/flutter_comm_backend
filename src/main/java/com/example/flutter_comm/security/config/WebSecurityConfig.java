@@ -63,6 +63,8 @@ public class WebSecurityConfig extends WebSecurityConfigurerAdapter {
                         POSTS_GET_ALL_PAM,
                         POSTS_GET_DETAILS_ALL_PAM,
                         COMMENTS_OF_POST_GET_ALL_PAM,
+                        COMMENTS_OF_POST_GET_MORE_PAM,
+                        COMMENTS_REPLY_OF_POST_GET_MORE_PAM,
                         COMMENTS_SEE_MORE_PAM,
                         COMMENTS_SEE_DETAILS_PAM,
                         POST_REACTIONS_GET_PAM

@@ -18,12 +18,14 @@ import java.util.UUID;
 public class CommentGetDto {
     private UUID uuid;
     private String content;
-    private AuthorForPostDto user;
+    private AuthorForPostDto createdBy;
     private CommentGetDto parentComment;
     private int replyCount;
     private int countReplyForParent;
     private List<CommentGetDto> replies;
     private ReactionResDto reactionResDto;
     private LocalDateTime createdAt;
+    private boolean isLastReply;
     private LocalDateTime editedAt;
+    private boolean isAuthor;
 }

@@ -1,5 +1,6 @@
 package com.example.flutter_comm.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import lombok.*;
 import org.hibernate.annotations.*;
 
@@ -39,10 +40,12 @@ public class CommentPost {
     @ManyToOne
     private CommentPost parent;
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @OneToMany(mappedBy = "supperComment")
+    @OneToMany(mappedBy = "supperComment", fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<CommentPost> listOfSupperComment;
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @OneToMany(mappedBy = "parent")
+    @OneToMany(mappedBy = "parent",fetch = FetchType.LAZY)
+    @JsonIgnore
     private List<CommentPost> replies;
     @CreationTimestamp
     private LocalDateTime createdAt;

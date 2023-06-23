@@ -1,24 +1,26 @@
 package com.example.flutter_comm.service.impl;
 
-import com.example.flutter_comm.dto.comment.CommentGetDto;
-import com.example.flutter_comm.dto.comment.CommentReplyDto;
-import com.example.flutter_comm.dto.comment.CommentSaveDto;
+import com.example.flutter_comm.dto.comment.*;
 import com.example.flutter_comm.dto.reaction.ReactionDto;
 import com.example.flutter_comm.dto.reaction.ReactionStatusResDto;
 import com.example.flutter_comm.entity.CommentPost;
 import com.example.flutter_comm.entity.Post;
 import com.example.flutter_comm.entity.User;
+import com.example.flutter_comm.entity.my_enum.CommentFilter;
 import com.example.flutter_comm.exception.ApiRequestException;
 import com.example.flutter_comm.repository.CommentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -45,18 +47,61 @@ public class CommentServiceImpl {
     }
 
     @Cacheable(value = "getCommentOfPost", key = "#post_uuid")
-    public List<CommentGetDto> getCommentWithoutParentByPostUUID(UUID post_uuid) {
+    public CommentResDto getCommentWithoutParentByPostUUID(UUID post_uuid) {
+        Pageable pageable = PageRequest.of(0, 10);
         User user = userService.getUserFromToken();
         Post post = postService.getByUUid(post_uuid);
-        return commentRepository.findByPostAndParentIsNull(post).stream().map(it -> toCommentDto(it, user)).collect(Collectors.toList());
+
+        Page<CommentPost> commentsOutstandingPage = commentRepository.findCommentPostOrderByTotalRepliesAndReaction(post.getUuid(), pageable);
+        List<CommentGetDto> commentsOutstandingList = commentsOutstandingPage.getContent().stream()
+                .map(commentPost -> toCommentDto(commentPost, user))
+                .collect(Collectors.toList());
+
+        Page<CommentPost> commentsLatestPage = commentRepository.findByPost_UuidAndParentIsNullOrderByCreatedAtDesc(post.getUuid(), pageable);
+        List<CommentGetDto> commentsLatestList = commentsLatestPage.getContent().stream()
+                .map(commentPost -> toCommentDto(commentPost, user))
+                .collect(Collectors.toList());
+
+        return CommentResDto.builder()
+                .commentsLatest(commentsLatestList)
+                .commentsOutstanding(commentsOutstandingList)
+                .totalComments(post.getCommentPosts().size())
+                .isLastComments(commentsLatestPage.isLast())
+                .build();
+    }
+    @Cacheable(value = "getCommentOfPost", key = "#post_uuid +'_'+ #page + '-' + #commentFilter ", unless = "#result.currentPage != #page")
+    public CommentGetMoreDto getMoreComment(UUID post_uuid, int page, CommentFilter commentFilter){
+        Pageable pageable = PageRequest.of(page-1, 10);
+        User user = userService.getUserFromToken();
+        Page<CommentPost> commentGetMore;
+        if (Objects.requireNonNull(commentFilter) == CommentFilter.hot) {
+            commentGetMore = commentRepository.findCommentPostOrderByTotalRepliesAndReaction(post_uuid, pageable);
+        }else {
+            commentGetMore = commentRepository.findByPost_UuidAndParentIsNullOrderByCreatedAtDesc(post_uuid, pageable);
+        }
+        List<CommentGetDto> commentGetDtoList = commentGetMore.getContent().stream()
+                .map(commentPost -> toCommentDto(commentPost, user))
+                .collect(Collectors.toList());
+        return  CommentGetMoreDto.builder()
+                .comments(commentGetDtoList)
+                .isLastComments(commentGetMore.isLast())
+                .currentPage(commentGetMore.getNumber())
+                .build();
+
     }
 
-    @Cacheable(value = "getCommentOfPost", key = "#parent_uuid + '-' +#post_uuid")
-    public List<CommentGetDto> getCommentByParentUUIDAndPostUUID(UUID parent_uuid, UUID post_uuid) {
+   @Cacheable(value = "getCommentOfPost", key = "#parent_uuid + '-' +#post_uuid+ '-' + #page", unless = "#result.currentPage != #page")
+    public CommentGetMoreDto getMoreCommentByParentUUIDAndPostUUID(UUID parent_uuid,UUID post_uuid, int page) {
         User user = userService.getUserFromToken();
-        Post post = postService.getByUUid(post_uuid);
+        Pageable pageable = PageRequest.of(page-1, 5);
         CommentPost parent = findCommentByUUid(parent_uuid);
-        return commentRepository.findByPostAndSupperComment(post, parent).stream().map(it -> toCommentDto(it, user)).collect(Collectors.toList());
+        Page<CommentPost> commentPostPage = commentRepository.findByPostAndSupperComment(parent.getPost(), parent, pageable);
+       List<CommentGetDto> commentGetDtoList = commentPostPage.getContent().stream().map(it -> toCommentDto(it, user)).collect(Collectors.toList());
+        return  CommentGetMoreDto.builder()
+                .comments(commentGetDtoList)
+                .isLastComments(commentPostPage.isLast())
+                .currentPage(commentPostPage.getNumber())
+                .build();
     }
 
     public ReactionStatusResDto addReactionForComment(UUID uuid, ReactionDto reactionDto) {
@@ -67,7 +112,6 @@ public class CommentServiceImpl {
 
     @Caching(
             evict = {
-                    @CacheEvict(value = "getCommentOfPost", key = "#commentReplyDto.parent_uuid + '-' +#post_uuid"),
                     @CacheEvict(value = "getCommentOfPost", key = "#post_uuid"),
                     @CacheEvict(value = {"posts"}, allEntries = true)
             }
@@ -98,7 +142,7 @@ public class CommentServiceImpl {
         return CommentGetDto.builder()
                 .uuid(commentReplyPost.getUuid())
                 .content(commentReplyPost.getContent())
-                .user(userService.toAuthorForPostDto(commentReplyPost.getUser()))
+                .createdBy(userService.toAuthorForPostDto(commentReplyPost.getUser()))
                 .replyCount(commentReplyPost.getReplies() == null ? 0 : commentReplyPost.getReplies().size())
                 .parentComment(commentParentDto(commentParentGet))
                 .countReplyForParent(commentParentGet.getReplies().size())
@@ -126,14 +170,13 @@ public class CommentServiceImpl {
                 .uuid(commentSave.getUuid())
                 .content(comment.getContent())
                 .countReplyForParent(0)
-                .user(userService.toAuthorForPostDto(commentSave.getUser()))
+                .createdBy(userService.toAuthorForPostDto(commentSave.getUser()))
                 .replyCount(commentSave.getReplies() == null ? 0 : commentSave.getReplies().size())
                 .build();
     }
 
     @Caching(
             evict = {
-                    @CacheEvict(value = "getCommentOfPost", key = "#commentPost.parent!=null?commentPost.parent.uuid:''  + '-' +#commentPost.post.uuid"),
                     @CacheEvict(value = "getCommentOfPost", key = "#commentPost.post.uuid")
             }
     )
@@ -156,7 +199,7 @@ public class CommentServiceImpl {
                 commentRepository.save(commentPost);
                 return CommentGetDto.builder()
                         .content("Comment này đã bị xoá")
-                        .user(userService.toAuthorForPostDto(userIsDelete))
+                        .createdBy(userService.toAuthorForPostDto(userIsDelete))
                         .build();
             }
         } else if (commentPost.getReplies().size() > 0) {
@@ -171,7 +214,7 @@ public class CommentServiceImpl {
                 commentRepository.save(commentPost);
                 return CommentGetDto.builder()
                         .content("Comment này đã bị xoá")
-                        .user(userService.toAuthorForPostDto(userIsDelete))
+                        .createdBy(userService.toAuthorForPostDto(userIsDelete))
                         .build();
             }
         } else {
@@ -182,7 +225,7 @@ public class CommentServiceImpl {
                 commentRepository.delete(commentPost.getSupperComment());
                 return CommentGetDto.builder()
                         .content("Comment này đã bị xoá")
-                        .user(userService.toAuthorForPostDto(userIsDelete))
+                        .createdBy(userService.toAuthorForPostDto(userIsDelete))
                         .build();
             }
             //xoá khi tất cả comment của parent comment isDelete = true
@@ -193,7 +236,7 @@ public class CommentServiceImpl {
                     commentRepository.delete(commentPost.getParent());
                     return CommentGetDto.builder()
                             .content("Comment này đã bị xoá")
-                            .user(userService.toAuthorForPostDto(userIsDelete))
+                            .createdBy(userService.toAuthorForPostDto(userIsDelete))
                             .build();
                 }
             }
@@ -201,13 +244,13 @@ public class CommentServiceImpl {
         commentRepository.delete(commentPost);
         return CommentGetDto.builder()
                 .content("Comment này đã bị xoá")
-                .user(userService.toAuthorForPostDto(userIsDelete))
+                .createdBy(userService.toAuthorForPostDto(userIsDelete))
                 .build();
     }
 
     @Caching(evict = {
             @CacheEvict(value = "getCommentOfPost", key = "#commentPost.post.uuid"),
-            @CacheEvict(value = "getCommentOfPost", key = "#commentPost.parent.uuid + '-' +#commentPost.post.uuid")
+//            @CacheEvict(value = "getCommentOfPost", key = "#commentPost.parent.uuid + '-' +#commentPost.post.uuid")
     })
 
     public CommentGetDto update(CommentPost commentPost, CommentSaveDto comment) {
@@ -222,30 +265,39 @@ public class CommentServiceImpl {
     }
 
     public CommentGetDto toCommentDto(CommentPost commentPost, User user) {
+        Pageable pageable = PageRequest.of(0, 5);
+        if(commentPost.isDelete()){
+            pageable = PageRequest.of(0, 100);
+        }
         User userIsDelete = User.builder()
                 .name("Ẩn danh")
                 .avatar("https://res.cloudinary.com/teepublic/image/private/s--IkWqQmTn--/t_Preview/b_rgb:0195c3,c_limit,f_auto,h_630,q_90,w_630/v1570281377/production/designs/6215195_0.jpg")
                 .build();
+        Page<CommentPost> commentPostPage = commentRepository.findByPostAndSupperComment(commentPost.getPost(), commentPost, pageable);
+        List<CommentGetDto> commentReplyGetDtoList = commentPostPage.getContent().stream()
+                .map(it -> toCommentDto(it, user))
+                .collect(Collectors.toList());
         if (commentPost.isDelete()) {
             return CommentGetDto.builder()
                     .content("Comment này đã bị xoá")
-                    .user(userService.toAuthorForPostDto(userIsDelete))
+                    .replies(commentReplyGetDtoList)
+                    .createdBy(userService.toAuthorForPostDto(userIsDelete))
+                    .isLastReply(true)
                     .build();
         }
-        List<CommentGetDto> commentOfSupper = new ArrayList<>();
-        if (!commentPost.getListOfSupperComment().isEmpty()) {
-            commentOfSupper = commentPost.getListOfSupperComment().stream().map(it -> toCommentDto(it, user)).collect(Collectors.toList());
-        }
+
         return CommentGetDto.builder()
                 .uuid(commentPost.getUuid())
                 .content(commentPost.getContent())
-                .user(userService.toAuthorForPostDto(commentPost.getUser()))
+                .createdBy(userService.toAuthorForPostDto(commentPost.getUser()))
                 .parentComment(commentPost.getParent() == null ? null : commentParentDto(commentPost.getParent()))
                 .replyCount(commentPost.getReplies().size())
                 .editedAt(commentPost.getEditedAt())
-                .replies(commentOfSupper)
+                .replies(commentReplyGetDtoList)
                 .createdAt(commentPost.getCreatedAt())
                 .reactionResDto(reactionService.getReactionOfCommentDto(user, commentPost))
+                .isAuthor(commentPost.getUser().equals(commentPost.getPost().getAuthor()))
+                .isLastReply(commentPostPage.isLast())
                 .build();
     }
 
@@ -253,7 +305,7 @@ public class CommentServiceImpl {
         return CommentGetDto.builder()
                 .uuid(commentPost.getUuid())
                 .content(commentPost.getContent())
-                .user(userService.toAuthorForPostDto(commentPost.getUser()))
+                .createdBy(userService.toAuthorForPostDto(commentPost.getUser()))
                 .build();
     }
 

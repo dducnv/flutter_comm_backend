@@ -8,6 +8,7 @@ import com.example.flutter_comm.dto.comment.CommentSaveDto;
 import com.example.flutter_comm.dto.reaction.ReactionDto;
 import com.example.flutter_comm.dto.reaction.ReactionStatusResDto;
 import com.example.flutter_comm.entity.CommentPost;
+import com.example.flutter_comm.entity.my_enum.CommentFilter;
 import com.example.flutter_comm.service.impl.AppServiceImpl;
 import com.example.flutter_comm.service.impl.CommentServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -55,13 +56,24 @@ public class CommentApiController {
                         .build()
         );
     }
-    @RequestMapping(value = PREFIX_COMMENT_REPLY_GET_API, method = RequestMethod.GET)
-    public ResponseEntity<?> getCommentByParentUUIDAndPostUUID(@PathVariable UUID post_uuid, @PathVariable UUID parent_uuid) {
+    @RequestMapping(value = PREFIX_COMMENT_GET_MORE_API, method = RequestMethod.GET)
+    public ResponseEntity<?> getMoreCommentByPostUUID( @PathVariable UUID post_uuid,@RequestParam(defaultValue = "2") int page,@RequestParam(defaultValue = "latest") String order) {
+        CommentFilter commentFilter = CommentFilter.valueOf(order);
         return ResponseEntity.ok(
                 ApiResDto.builder()
                         .message("Lấy dữ liệu thành công!")
                         .httpStatus(HttpStatus.OK)
-                        .data(commentService.getCommentByParentUUIDAndPostUUID(parent_uuid, post_uuid))
+                        .data(commentService.getMoreComment(post_uuid, page,commentFilter))
+                        .build()
+        );
+    }
+    @RequestMapping(value = PREFIX_COMMENT_REPLY_GET_MORE_API, method = RequestMethod.GET)
+    public ResponseEntity<?> getMoreCommentByParentUUID( @PathVariable UUID parent_uuid,@PathVariable UUID post_uuid,@RequestParam(defaultValue = "2") int page) {
+        return ResponseEntity.ok(
+                ApiResDto.builder()
+                        .message("Lấy dữ liệu thành công!")
+                        .httpStatus(HttpStatus.OK)
+                        .data(commentService.getMoreCommentByParentUUIDAndPostUUID(parent_uuid,post_uuid, page))
                         .build()
         );
     }
