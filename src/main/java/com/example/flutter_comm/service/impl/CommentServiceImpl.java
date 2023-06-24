@@ -283,6 +283,7 @@ public class CommentServiceImpl {
                     .replies(commentReplyGetDtoList)
                     .createdBy(userService.toAuthorForPostDto(userIsDelete))
                     .isLastReply(true)
+                    .isDeleted(commentPost.isDelete())
                     .build();
         }
 
@@ -298,6 +299,7 @@ public class CommentServiceImpl {
                 .reactionResDto(reactionService.getReactionOfCommentDto(user, commentPost))
                 .isAuthor(commentPost.getUser().equals(commentPost.getPost().getAuthor()))
                 .isLastReply(commentPostPage.isLast())
+                .isDeleted(commentPost.isDelete())
                 .build();
     }
 

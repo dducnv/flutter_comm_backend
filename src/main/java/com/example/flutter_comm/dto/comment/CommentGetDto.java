@@ -27,5 +27,6 @@ public class CommentGetDto {
     private LocalDateTime createdAt;
     private boolean isLastReply;
     private LocalDateTime editedAt;
+    private boolean isDeleted;
     private boolean isAuthor;
 }
